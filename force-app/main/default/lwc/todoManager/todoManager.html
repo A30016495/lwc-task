@@ -1,7 +1,5 @@
 <template>
-    <!-- Lightning Card -->
     <lightning-card title="ToDo List" style="width: 100%;">
-        <!-- Sync Action -->
         <lightning-button-icon
             slot="actions"
             icon-name="utility:sync"
@@ -11,11 +9,9 @@
         </lightning-button-icon>
         <lightning-layout>
             <lightning-layout-item size="12" padding="around-small">
-                <!-- Show Spinner only when the processing variable is true -->
                 <template if:true={processing}>
                     <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
                 </template>
-                <!-- Iterating the ToDo Tasks and displaying them in a list -->
                 <ul class="slds-has-dividers_around-space">
                     <template for:each={todoTasks} for:item="todoTask">
                         <li class="slds-item" key={todoTask.id}>
@@ -24,7 +20,6 @@
                                     {todoTask.name}
                                 </lightning-layout-item>
                                 <lightning-layout-item padding="horizontal-small">
-                                    <!-- Button to delete/remove the task from the list -->
                                     <lightning-button-icon
                                         icon-name="utility:delete"
                                         alternative-text="Delete"
@@ -41,7 +36,6 @@
         </lightning-layout>
         <p slot="footer">
             <lightning-layout pull-to-boundary="small">
-                <!-- Input text field to enter the Label of new Task -->
                 <lightning-layout-item padding="horizontal-small" flexibility="grow">
                     <lightning-input
                         type="text"
@@ -54,7 +48,6 @@
                         required>
                     </lightning-input>
                 </lightning-layout-item>
-                <!-- Button to add New Task to the ToDo List -->
                 <lightning-layout-item padding="horizontal-small">
                     <lightning-button
                         variant="brand"
