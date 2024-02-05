@@ -4,106 +4,88 @@ import { refreshApex } from '@salesforce/apex';
 import insertTask from '@salesforce/apex/ToDoListController.insertTask';
 import deleteTask from '@salesforce/apex/ToDoListController.deleteTask';
 
-export default class Todo extends LightningElement {
-
-    @track
-    todoTasks = [];
-
+export default class CustomTodo extends LightningElement {
+    @track todoTasks = [];
     todoTasksResponse;
-
     processing = true;
-
     newTask = '';
 
     updateNewTask(event) {
         this.newTask = event.target.value;
     }
 
-    addTaskToList(event) {
-
-        if(this.newTask=='') {
+    addTaskToList() {
+        if (this.newTask === '') {
             return;
         }
 
-        this.processing =  true;
+        this.processing = true;
 
         insertTask({ subject: this.newTask })
-        .then(result => {
-            console.log(result);
-            this.todoTasks.push({
-                id: this.todoTasks[this.todoTasks.length - 1] ? this.todoTasks[this.todoTasks.length - 1].id + 1 : 0,
-                name: this.newTask,
-                recordId: result.Id
-            });
-            this.newTask = '';
-            console.log(JSON.stringify(this.todoTasks));
-        })
-        .catch(error => console.log(error))
-        .finally(() => this.processing = false);
+            .then(result => {
+                console.log(result);
+                const newTaskItem = {
+                    id: this.todoTasks.length ? this.todoTasks[this.todoTasks.length - 1].id + 1 : 0,
+                    name: this.newTask,
+                    recordId: result.Id
+                };
+                this.todoTasks = [...this.todoTasks, newTaskItem];
+                this.newTask = '';
+                console.log(JSON.stringify(this.todoTasks));
+            })
+            .catch(error => console.log(error))
+            .finally(() => (this.processing = false));
     }
 
     deleteTaskFromList(event) {
-
-        let idToDelete = event.target.name;
-        let todoTasks = this.todoTasks;
-        let todoTaskIndex;
-        let recordIdToDelete;
+        const idToDelete = event.target.name;
 
         this.processing = true;
 
-        for(let i=0; i<todoTasks.length; i++) {
-            if(idToDelete === todoTasks[i].id) {
-                todoTaskIndex = i;
-            }
+        const taskToDelete = this.todoTasks.find(task => task.id === idToDelete);
+
+        if (taskToDelete) {
+            deleteTask({ recordId: taskToDelete.recordId })
+                .then(result => {
+                    console.log(result);
+                    if (result) {
+                        this.todoTasks = this.todoTasks.filter(task => task.id !== idToDelete);
+                    } else {
+                        console.log('Unable to delete task');
+                    }
+                    console.log(JSON.stringify(this.todoTasks));
+                })
+                .catch(error => console.log(error))
+                .finally(() => (this.processing = false));
         }
-
-        recordIdToDelete = todoTasks[todoTaskIndex].recordId;
-
-        deleteTask({ recordId: recordIdToDelete })
-        .then(result => {
-            console.log(result);
-            if(result) {
-                todoTasks.splice(todoTaskIndex, 1);
-            } else {
-                console.log('Unable to delete task');
-            }
-            console.log(JSON.stringify(this.todoTasks));
-        })
-        .catch(error => console.log(error))
-        .finally(() => this.processing = false);
     }
 
     @wire(getTasks)
-    getTodoTasks(response) {
+    getCustomTodoTasks(response) {
         this.todoTasksResponse = response;
-        let data = response.data;
-        let error = response.error;
+        const { data, error } = response;
 
-        if(data || error) {
+        if (data || error) {
             this.processing = false;
         }
 
-        if(data) {
+        if (data) {
             console.log('data');
             console.log(data);
-            this.todoTasks = [];
-            data.forEach(task => {
-                this.todoTasks.push({
-                    id: this.todoTasks.length + 1,
-                    name: task.Subject,
-                    recordId: task.Id
-                });
-            });
-        } else if(error) {
+            this.todoTasks = data.map((task, index) => ({
+                id: index + 1,
+                name: task.Subject,
+                recordId: task.Id
+            }));
+        } else if (error) {
             console.log('error');
             console.log(error);
-       }
+        }
     }
 
-    refreshTodoList() {
+    refreshCustomTodoList() {
         this.processing = true;
         refreshApex(this.todoTasksResponse)
-        .finally(() => this.processing = false);
+            .finally(() => (this.processing = false));
     }
-
 }
